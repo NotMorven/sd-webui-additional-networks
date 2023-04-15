@@ -146,9 +146,26 @@ class Script(scripts.Script):
                     return updates
 
                 # mask for regions
+                import cv2
+                def gen_mask(input_image):
+                    lower_red = np.array([0, 0, 254])    # [0, 0, 255]下限
+                    upper_red = np.array([0, 0, 256])    # [0, 0, 255]上限
+                    lower_green = np.array([0, 254, 0])  # [0, 255, 0]下限
+                    upper_green = np.array([0, 256, 0])  # [0, 255, 0]上限
+                    lower_blue = np.array([254, 0, 0])   # [255, 0, 0]下限
+                    upper_blue = np.array([256, 0, 0])   # [255, 0, 0]上限
+                    mask_red = cv2.inRange(input_image, lower_red, upper_red)
+                    mask_green = cv2.inRange(input_image, lower_green, upper_green)
+                    mask_blue = cv2.inRange(input_image, lower_blue, upper_blue)
+                    mask = mask_red+mask_green+mask_blue
+                    result = input_image.copy()
+                    result[mask == 0] = [0, 0, 0]
+                    return result
                 with gr.Accordion("Extra args", open=False):
                     with gr.Row():
-                        mask_image = gr.Image(label="mask image:")
+                        # mask_image = gr.Image(label="mask image:")
+                        mask_image = gr.Image(label="mask image:", tool="color-sketch")
+                        mask_image = gen_mask(mask_image)
                         ctrls.append(mask_image)
 
                 refresh_models = gr.Button(value="Refresh models")

@@ -288,7 +288,11 @@ class Script(scripts.Script):
                         continue
                     mask = torch.tensor(mask, dtype=p.sd_model.dtype, device=p.sd_model.device)
 
-                    network.set_mask(mask, height=p.height, width=p.width, hr_height=p.hr_upscale_to_y, hr_width=p.hr_upscale_to_x)
+                    # network.set_mask(mask, height=p.height, width=p.width, hr_height=p.hr_upscale_to_y, hr_width=p.hr_upscale_to_x)
+                    if hasattr(p, "hr_upscale_to_y"):
+                        network.set_mask(mask, height=p.height, width=p.width, hr_height=p.hr_upscale_to_y, hr_width=p.hr_upscale_to_x)
+                    else:
+                        network.set_mask(mask, height=p.height, width=p.width, hr_height=p.height, hr_width=p.width)
                     print(f"apply mask. channel: {i}, model: {model}")
             else:
                 for network, _ in self.latest_networks:

@@ -170,10 +170,10 @@ class Script(scripts.Script):
                         preview_mask = gr.Image(label="generated mask", visible=False)
                         ctrls.append(mask_image)
                     with gr.Row():
-                        preview_mask = gr.Button(value="Preview regional-mask")
-                        hide_preview = gr.Button(value="hide regional-mask")
-                        preview_mask.click(fn=gen_mask, inputs=[mask_image], outputs=[preview_mask])
-                        hide_preview.click(fn=lambda: gr.update(visible=False), inputs=None, outputs=[preview_mask])
+                        preview_mask_button = gr.Button(value="Preview regional-mask")
+                        hide_preview_button = gr.Button(value="hide regional-mask")
+                        preview_mask_button.click(fn=gen_mask, inputs=[mask_image["image"]], outputs=[preview_mask])
+                        hide_preview_button.click(fn=lambda: gr.update(visible=False), inputs=None, outputs=[preview_mask])
 
                 refresh_models = gr.Button(value="Refresh models")
                 refresh_models.click(refresh_all_models, inputs=model_dropdowns, outputs=model_dropdowns)

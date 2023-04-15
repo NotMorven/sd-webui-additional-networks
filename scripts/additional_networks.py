@@ -33,6 +33,10 @@ def gen_mask(input_image):
     result = input_image.copy()
     result[mask == 0] = [0, 0, 0]
     return result
+def gen_mask_module(input_image):
+    result = gen_mask(input_image)
+    if result is not None:
+        return gr.update(value=result, visible=True, interactive=False)
 
 
 class Script(scripts.Script):
@@ -172,8 +176,8 @@ class Script(scripts.Script):
                     with gr.Row():
                         preview_mask_button = gr.Button(value="Preview regional-mask")
                         hide_preview_button = gr.Button(value="hide regional-mask")
-                        preview_mask_button.click(fn=gen_mask, inputs=[mask_image["image"]], outputs=[preview_mask])
-                        hide_preview_button.click(fn=lambda: gr.update(visible=False), inputs=None, outputs=[preview_mask])
+                    preview_mask_button.click(fn=gen_mask_module, inputs=[mask_image], outputs=[preview_mask])
+                    hide_preview_button.click(fn=lambda: gr.update(visible=False), inputs=None, outputs=[preview_mask])
 
                 refresh_models = gr.Button(value="Refresh models")
                 refresh_models.click(refresh_all_models, inputs=model_dropdowns, outputs=model_dropdowns)

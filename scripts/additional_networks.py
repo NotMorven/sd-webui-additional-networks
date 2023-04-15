@@ -18,6 +18,23 @@ memo_symbol = "\U0001F4DD"  # 📝
 addnet_paste_params = {"txt2img": [], "img2img": []}
 
 
+import cv2
+def gen_mask(input_image):
+    lower_red = np.array([0, 0, 254])    # [0, 0, 255]下限
+    upper_red = np.array([0, 0, 256])    # [0, 0, 255]上限
+    lower_green = np.array([0, 254, 0])  # [0, 255, 0]下限
+    upper_green = np.array([0, 256, 0])  # [0, 255, 0]上限
+    lower_blue = np.array([254, 0, 0])   # [255, 0, 0]下限
+    upper_blue = np.array([256, 0, 0])   # [255, 0, 0]上限
+    mask_red = cv2.inRange(input_image, lower_red, upper_red)
+    mask_green = cv2.inRange(input_image, lower_green, upper_green)
+    mask_blue = cv2.inRange(input_image, lower_blue, upper_blue)
+    mask = mask_red+mask_green+mask_blue
+    result = input_image.copy()
+    result[mask == 0] = [0, 0, 0]
+    return result
+
+
 class Script(scripts.Script):
     def __init__(self) -> None:
         super().__init__()
@@ -146,32 +163,16 @@ class Script(scripts.Script):
                     return updates
 
                 # mask for regions
-                import cv2
-                def gen_mask(input_image):
-                    lower_red = np.array([0, 0, 254])    # [0, 0, 255]下限
-                    upper_red = np.array([0, 0, 256])    # [0, 0, 255]上限
-                    lower_green = np.array([0, 254, 0])  # [0, 255, 0]下限
-                    upper_green = np.array([0, 256, 0])  # [0, 255, 0]上限
-                    lower_blue = np.array([254, 0, 0])   # [255, 0, 0]下限
-                    upper_blue = np.array([256, 0, 0])   # [255, 0, 0]上限
-                    mask_red = cv2.inRange(input_image, lower_red, upper_red)
-                    mask_green = cv2.inRange(input_image, lower_green, upper_green)
-                    mask_blue = cv2.inRange(input_image, lower_blue, upper_blue)
-                    mask = mask_red+mask_green+mask_blue
-                    result = input_image.copy()
-                    result[mask == 0] = [0, 0, 0]
-                    return result
                 with gr.Accordion("Extra args", open=False):
                     with gr.Row():
                         # mask_image = gr.Image(label="mask image:")
                         mask_image = gr.Image(label="mask image:", tool="color-sketch")
                         preview_mask = gr.Image(label="generated mask", visible=False)
-                        mask_image = gen_mask(mask_image["mask"])
                         ctrls.append(mask_image)
                     with gr.Row():
                         preview_mask = gr.Button(value="Preview regional-mask")
                         hide_preview = gr.Button(value="hide regional-mask")
-                        preview_mask.click(fn=lambda x:x, inputs=[mask_image], outputs=[preview_mask])
+                        preview_mask.click(fn=gen_mask, inputs=[mask_image], outputs=[preview_mask])
                         hide_preview.click(fn=lambda: gr.update(visible=False), inputs=None, outputs=[preview_mask])
 
                 refresh_models = gr.Button(value="Refresh models")
@@ -278,6 +279,7 @@ class Script(scripts.Script):
         if len(self.latest_networks) > 0:
             mask_image = args[-2]
             if mask_image is not None:
+                mask_image = gen_mask(mask_image)
                 mask_image = mask_image.astype(np.float32) / 255.0
                 print(f"use mask image to control LoRA regions.")
                 for i, (network, model) in enumerate(self.latest_networks[:3]):
